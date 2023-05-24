@@ -25,15 +25,18 @@ architecture rtl of TMDS_8b10b_encoder is
         );
     end component;
 
-    signal r_cnt_disparity      : integer range -8 to 8 := 0;
-    signal w_int_data_9b        : std_logic_vector(8 downto 0);
-    signal w_int_data_10b        : std_logic_vector(9 downto 0);
+    signal w_disparity      : integer range -8 to 8 := 0;
+    signal r_dc_bias      : integer range -16 to 16 := 0;
+    signal w_qm        : std_logic_vector(8 downto 0);
+    signal w_qm_inv     :   std_logic_vector(8 downto 0);
+    signal w_qout        : std_logic_vector(9 downto 0);
     signal w_ones_i_data       : integer range 0 to 8 := 0;
-    signal w_ones_int_data       : integer range 0 to 9 := 0;
+    signal w_ones_qm       : integer range 0 to 8 := 0;
+
 
 begin
 
-    count_ones_8b : count_ones
+    count_ones_i_data : count_ones
         generic map (
             g_VECTOR_LENGTH => 8
         )
@@ -42,79 +45,86 @@ begin
             o_num_of_ones => w_ones_i_data
         );
 
-    count_ones_9b : count_ones
+    count_ones_qm : count_ones
         generic map (
-            g_VECTOR_LENGTH => 9
+            g_VECTOR_LENGTH => 8
         )
         port map ( 
-            i_data => w_int_data_9b,
-            o_num_of_ones => w_ones_int_data
+            i_data => w_qm(7 downto 0),
+            o_num_of_ones => w_ones_qm
         );
 
+w_qm_inv <= w_qm(8) & not w_qm(7 downto 0);
 
-o_data <= w_int_data_10b;
-
-encode : process(i_data)
-    signal w_temp : std_logic_vector(7 downto 0);
+encode : process(i_data, w_qm, w_ones_i_data)
 begin
-    if (w_ones_i_data >= 4) then                               -- when there are 4 or more 1s, the bits get xnor'ed
-        for i in 0 to 6 loop
-            w_temp(i) <= i_data(i) xnor i_data(i+1);
-        end loop;
-        w_temp(7) <= '0';                               -- indicates that the data bits have been xnor'ed
-    else                                                -- when there are less then 4 1s, the bits get xor'ed
-        for i in 0 to 6 loop
-            w_temp(i) <= i_data(i) xor i_data(i+1);
-        end loop;
-        w_temp(7) <= '1';                               -- indicates that the data bits have been xor'ed
-    end if;
-    w_int_data_9b <= w_temp & i_data(0);                -- first data bit remains unchanged
+        if (w_ones_i_data > 4 or (w_ones_i_data = 4 and i_data(0) = '0')) then                               -- when there are 4 or more 1s, the bits get xnor'ed
+            w_qm(0) <= i_data(0);    
+            w_qm(1) <= w_qm(0) xnor i_data(1);
+            w_qm(2) <= w_qm(1) xnor i_data(2);
+            w_qm(3) <= w_qm(2) xnor i_data(3);
+            w_qm(4) <= w_qm(3) xnor i_data(4);
+            w_qm(5) <= w_qm(4) xnor i_data(5);
+            w_qm(6) <= w_qm(5) xnor i_data(6);
+            w_qm(7) <= w_qm(6) xnor i_data(7);
+            w_qm(8) <= '0';                             -- indicates that the data bits have been xnor'ed
+        else                                                -- when there are less then 4 1s, the bits get xor'ed
+            w_qm(0) <= i_data(0);    
+            w_qm(1) <= w_qm(0) xor i_data(1);
+            w_qm(2) <= w_qm(1) xor i_data(2);
+            w_qm(3) <= w_qm(2) xor i_data(3);
+            w_qm(4) <= w_qm(3) xor i_data(4);
+            w_qm(5) <= w_qm(4) xor i_data(5);
+            w_qm(6) <= w_qm(5) xor i_data(6);
+            w_qm(7) <= w_qm(6) xor i_data(7); 
+            w_qm(8) <= '1';                               -- indicates that the data bits have been xor'ed
+        end if;
 end process;
 
-invert : process(w_int_data_9b)
+decide_output : process(w_qm, w_qm_inv, r_dc_bias, w_ones_qm, i_C0, i_C1)
 begin
-    if (r_cnt_disparity = 0 or w_ones_int_data = 4) then
-        w_int_data_10b(9) <= not w_int_data_9b(8);
-        w_int_data_10b(8) <= w_int_data_9b(8);
-        if (w_int_data_9b(8) = '1') then
-            w_int_data_10b(7 downto 0) <= w_int_data_9b(7 downto 0);
+    if (i_data_enable = '0') then    
+        w_disparity <= 0;
+        if(i_C0 = '0' and i_C1 = '0') then
+            w_qout <= "1101010100";
+        elsif(i_C0 = '1' and i_C1 = '0') then
+            w_qout <= "0010101011";
+        elsif(i_C0 = '0' and i_C1 = '1') then 
+            w_qout <= "0101010100";
+        elsif(i_C0 = '1' and i_C1 = '1') then
+            w_qout <= "1010101011";
+        end if;
+    elsif (r_dc_bias = 0 or w_ones_qm = 4) then
+        if (w_qm(8) = '1') then
+            w_qout <= '0' &  w_qm;
+            w_disparity <= (r_dc_bias + (8 - 2*w_ones_qm));
         else
-            w_int_data_10b(7 downto 0) <= not w_int_data_9b(7 downto 0);
+            w_qout <= '1' & w_qm_inv;
+            w_disparity <=  (r_dc_bias + w_ones_qm - (8 - w_ones_qm));
         end if;        
-    elsif ((r_cnt_disparity > 0 and w_ones_int_data > 8 - w_ones_int_data) or (r_cnt_disparity < 0 and (8-w_ones_int_data > w_ones_int_data))) then
-        w_int_data_10b <= '1' & w_int_data_9b(8) & not w_int_data_9b(7 downto 0);
-    else
-        w_int_data_10b <= '0' & w_int_data_9b(8 downto 0);
-    end if;
-end process;
-
-set_output : process(i_clk)
-
-begin
-    if (rising_edge(i_clk)) then
-        if (i_data_enable = '0') then
-            r_cnt_disparity <= 0;
-            w_int_data_10b <=   "0010101011" when (i_C0 = '0' and i_C1 = '0') else
-                                "1101010100" when (i_C0 = '1' and i_C1 = '0') else
-                                "0010101010" when (i_C0 = '0' and i_C1 = '1') else
-                                "1101010101" when (i_C0 = '1' and i_C1 = '1') else
-                                (others => '0');
-        elsif (r_cnt_disparity = 0 or w_ones_int_data = 4) then
-            r_cnt_disparity <=  (r_cnt_disparity + w_ones_int_data - (8 - w_ones_int_data)) when w_int_data_9b(8) = '0' else
-                                (r_cnt_disparity + (8 - 2*w_ones_int_data)) when w_int_data_9b(8) = '1' else
-                                0;
+    elsif ((r_dc_bias > 0 and w_ones_qm > 4) or (r_dc_bias < 0 and w_ones_qm < 4)) then
+        w_qout <= '1' & w_qm_inv;
+        if(w_qm(8) = '1') then
+            w_disparity <= r_dc_bias +2 + (8 - 2*w_ones_qm);
         else
-            if w_int_data_10b(9) = '1' and w_int_data_10b(8) = '1' then
-                r_cnt_disparity <= r_cnt_disparity +2 + (8 - 2*w_ones_int_data);
-            elsif w_int_data_10b(9) = '1' and w_int_data_10b(8) = '0' then
-                r_cnt_disparity <= r_cnt_disparity + (8 - 2*w_ones_int_data);
-            elsif w_int_data_10b(9) = '0' and w_int_data_10b(8) = '1' then
-                r_cnt_disparity <= r_cnt_disparity + w_ones_int_data -(8-w_ones_int_data);
-            else 
-                r_cnt_disparity <= r_cnt_disparity -2 + (w_ones_int_data -(8-w_ones_int_data));
-            end if;
+            w_disparity <= r_dc_bias + (8 - 2*w_ones_qm);
+        end if;
+    else
+        w_qout <= '0' & w_qm;
+        if(w_qm(8) = '1') then
+            w_disparity <= r_dc_bias + w_ones_qm -(8-w_ones_qm);
+        else
+            w_disparity <= r_dc_bias -2 + (w_ones_qm -(8-w_ones_qm));
         end if;
     end if;
 end process;
 
+    ff : process(i_clk)
+    begin
+        if (rising_edge(i_clk)) then
+            o_data <= w_qout;
+            r_dc_bias <= w_disparity;
+        end if;
+    end process;
 end architecture;
+    
