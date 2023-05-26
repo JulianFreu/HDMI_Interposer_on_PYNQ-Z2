@@ -1,5 +1,4 @@
---  Copy the following two statements and paste them before the
---  Entity declaration, unless they already exist.
+
 
 Library UNISIM;
 use UNISIM.vcomponents.all;
@@ -21,19 +20,7 @@ use UNISIM.vcomponents.all;
       IB => IB -- Diff_n buffer input (connect directly to top-level port)
    );
 
-   -- End of IBUFDS_inst instantiation
 
-					--  Copy the following two statements and paste them before the
---  Entity declaration, unless they already exist.
-
-Library UNISIM;
-use UNISIM.vcomponents.all;
-
---  <-----Cut code below this line and paste into the architecture body---->
-
-   -- OBUFDS: Differential Output Buffer
-   --         Artix-7
-   -- Xilinx HDL Language Template, version 2022.2
    
    OBUFDS_inst : OBUFDS
    generic map (
@@ -48,6 +35,8 @@ use UNISIM.vcomponents.all;
    -- End of OBUFDS_inst instantiation
 
 					
+Library UNISIM;
+use UNISIM.vcomponents.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -88,6 +77,57 @@ architecture behaviour of HDMI_Interposer is
 
 begin
 
+    generate_data_buffers : for i in 0 to 2 generate 
+        rx_buf_i : IBUFDS 
+        generic map (
+            DIFF_TERM => FALSE,             -- Differential Termination 
+            IBUF_LOW_PWR => TRUE,           -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+            IOSTANDARD => "DEFAULT")
+        port map (
+            O => O,                 -- Buffer output
+            I => hdmi_rx_d_p(i),      -- Diff_p buffer input (connect directly to top-level port)
+            IB => hdmi_rx_d_n(i)      -- Diff_n buffer input (connect directly to top-level port)
+        );
+        
+        tx_buf_i : OBUFDS
+        generic map (
+            IOSTANDARD => "DEFAULT",        -- Specify the output I/O standard
+            SLEW => "SLOW")                 -- Specify the output slew rate
+        port map (
+            O => hdmi_tx_d_p(i),      -- Diff_p output (connect directly to top-level port)
+            OB => hdmi_tx_d_n(i),     -- Diff_n output (connect directly to top-level port)
+            I => I                  -- Buffer input 
+        );
+    end generate;
+
+    hdmi_clk_in : IBUFDS 
+        generic map (
+            DIFF_TERM => FALSE,             -- Differential Termination 
+            IBUF_LOW_PWR => TRUE,           -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+            IOSTANDARD => "DEFAULT")
+        port map (
+            O => O,                 -- Buffer output
+            I => hdmi_rx_clk_p,      -- Diff_p buffer input (connect directly to top-level port)
+            IB => hdmi_rx_clk_n      -- Diff_n buffer input (connect directly to top-level port)
+        );
+
+    hdmi_clk_out : IBUFDS 
+        generic map (
+            DIFF_TERM => FALSE,             -- Differential Termination 
+            IBUF_LOW_PWR => TRUE,           -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+            IOSTANDARD => "DEFAULT")
+        port map (
+            O => O,                 -- Buffer output
+            I => hdmi_tx_clk_p,      -- Diff_p buffer input (connect directly to top-level port)
+            IB => hdmi_tx_clk_n      -- Diff_n buffer input (connect directly to top-level port)
+        );
+    generate_decoder : for i in 0 to 2 generate
+
+    end generate;
     
+    generate_encoder : for i in 0 to 2 generate
+
+    end generate;
+
 end architecture;
     
