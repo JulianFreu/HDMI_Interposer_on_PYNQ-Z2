@@ -1,9 +1,37 @@
 # https://docs.xilinx.com/r/en-US/ug904-vivado-implementation/Key-Steps-in-Non-Project-Mode-Example-Script
 # Step 1: Read Design Source Files
+
+read_vhdl counter_fsm.vhd
+read_vhdl debounce_button.vhd
+read_vhdl counter_32b.vhd
+read_vhdl alu.vhd
+read_vhdl One_Hot_Decoder.vhd
+
 # Step 2: Build the In-Memory Design
+
+link_design -part xc7a35tcpg236-1 -top counter_fsm
+
 # Step 3: Read Design Constraints
+
+read_xdc Basys3_Master.xdc
+
 # Step 4: Perform Logic Optimization
+
+opt_design
+
 # Step 5: Place the Design
+
+place_design -directive Default
+write_checkpoint post_place.dcp
+
 # Step 6: Route the Design
+
+route_design -directive AdvancedSkewModeling
+
 # Step 7: Run Required Reports
+
+report_utilization -file post_route_utilization.rpt
+
 # Step 8: Save the Design Checkpoint
+
+write_checkpoint post_route.dcp
