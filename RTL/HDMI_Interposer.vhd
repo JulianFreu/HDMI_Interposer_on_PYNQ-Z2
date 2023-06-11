@@ -38,18 +38,18 @@ end HDMI_Interposer;
 
 architecture behaviour of HDMI_Interposer is
 
-    component clk_wiz_0
-    port
-     (-- Clock in ports
-      -- Clock out ports
-      clk_75MHZ          : out    std_logic;
-      clk_750MHZ          : out    std_logic;
-      -- Status and control signals
-      reset             : in     std_logic;
-      locked            : out    std_logic;
-      clk_in1           : in     std_logic
-     );
-     end component;
+    component pll_1
+        port
+         (-- Clock in ports
+          -- Clock out ports
+          clk_625MHz          : out    std_logic;
+          clk_62_5MHz          : out    std_logic;
+          -- Status and control signals
+          reset             : in     std_logic;
+          locked            : out    std_logic;
+          clk_in1           : in     std_logic
+         );
+    end component;
  
     component TMDS_8b10b_encoder is 
         port (
@@ -90,8 +90,8 @@ architecture behaviour of HDMI_Interposer is
      signal r_counter_x : integer range 0 to 1649 := 0;
      signal r_counter_y : integer range 0 to 749 := 0;
      signal w_reset : std_logic;
-     signal w_clk_75MHZ : std_logic;
-     signal w_clk_750MHZ : std_logic;
+     signal w_clk_62_5MHz : std_logic;
+     signal w_clk_625MHz : std_logic;
      signal w_locked : std_logic;
      signal w_sysclk : std_logic;
  
@@ -109,20 +109,22 @@ architecture behaviour of HDMI_Interposer is
     signal w_green : std_logic;
     signal w_blue : std_logic;
 begin
-
-    clocks : clk_wiz_0
-    port map (
-      clk_75MHZ         => w_clk_75MHZ,
-      clk_750MHZ       => w_clk_750MHZ,
-      reset            => w_reset,
-      locked            => w_locked,
-      clk_in1          => w_sysclk
-     );
+    clocks: pll_1
+    port map ( 
+    -- Clock out ports  
+        clk_625MHz => w_clk_625MHz,
+        clk_62_5MHz => w_clk_62_5MHz,
+    -- Status and control signals                
+        reset => w_reset,
+        locked => w_locked,
+        -- Clock in ports
+        clk_in1 => w_sysclk
+    );
     
     
-    counters : process(w_clk_75MHZ)
+    counters : process(w_clk_62_5MHz)
     begin
-        if rising_edge(w_clk_75MHZ) then
+        if rising_edge(w_clk_62_5MHz) then
             if (r_counter_x = 1649) then 
                 r_counter_x <= 0;
             else
@@ -206,14 +208,14 @@ begin
         port map (
             O => hdmi_tx_clk_p,     -- Diff_p output (connect directly to top-level port)
             OB => hdmi_tx_clk_n,   -- Diff_n output (connect directly to top-level port)
-            I => w_clk_75MHZ      -- Buffer input 
+            I => w_clk_62_5MHz      -- Buffer input 
         );
 
     --end generate;
     
     encode_red : TMDS_8b10b_encoder 
         port map (
-            i_clk           => w_clk_75MHZ,
+            i_clk           => w_clk_62_5MHz,
             i_data_enable   => w_DrawArea,
             i_C0            => '0',
             i_C1            => '0',
@@ -222,7 +224,7 @@ begin
         );
    encode_green : TMDS_8b10b_encoder 
         port map (
-            i_clk           => w_clk_75MHZ,
+            i_clk           => w_clk_62_5MHz,
             i_data_enable   => w_DrawArea,
             i_C0            => '0',
             i_C1            => '0',
@@ -231,7 +233,7 @@ begin
         );
    encode_blue : TMDS_8b10b_encoder 
         port map (
-            i_clk           => w_clk_75MHZ,
+            i_clk           => w_clk_62_5MHz,
             i_data_enable   => w_DrawArea,
             i_C0            => w_vsync,
             i_C1            => w_hsync,
@@ -239,9 +241,9 @@ begin
             o_data          => r_encoded_byte_b 
         );
     
-    shift_counter : process(w_clk_750MHZ)
+    shift_counter : process(w_clk_625MHz)
     begin
-        if rising_edge(w_clk_750MHZ) then
+        if rising_edge(w_clk_625MHz) then
             if (r_shift_counter = 9) then
                 r_shift_counter <= 0;
             else
