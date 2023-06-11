@@ -22,36 +22,36 @@ if { [file isdirectory ../"IP"] } {
         -dir ../IP
 
     set_property -dict [list \
-      CONFIG.CLKIN1_JITTER_PS {80.0} \
-      CONFIG.CLKOUT1_DRIVES {BUFG} \
-      CONFIG.CLKOUT1_JITTER {78.432} \
-      CONFIG.CLKOUT1_PHASE_ERROR {83.589} \
-      CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {625} \
-      CONFIG.CLKOUT2_DRIVES {BUFG} \
-      CONFIG.CLKOUT2_JITTER {120.406} \
-      CONFIG.CLKOUT2_PHASE_ERROR {83.589} \
-      CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {62.5} \
-      CONFIG.CLKOUT2_USED {true} \
-      CONFIG.CLKOUT3_DRIVES {BUFG} \
-      CONFIG.CLKOUT4_DRIVES {BUFG} \
-      CONFIG.CLKOUT5_DRIVES {BUFG} \
-      CONFIG.CLKOUT6_DRIVES {BUFG} \
-      CONFIG.CLKOUT7_DRIVES {BUFG} \
-      CONFIG.CLK_OUT1_PORT {clk_625MHz} \
-      CONFIG.CLK_OUT2_PORT {clk_62_5MHz} \
-      CONFIG.Component_Name {pll_1} \
-      CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
-      CONFIG.MMCM_CLKFBOUT_MULT_F {10} \
-      CONFIG.MMCM_CLKIN1_PERIOD {8.000} \
-      CONFIG.MMCM_CLKOUT0_DIVIDE_F {2} \
-      CONFIG.MMCM_CLKOUT1_DIVIDE {20} \
-      CONFIG.MMCM_COMPENSATION {ZHOLD} \
-      CONFIG.MMCM_DIVCLK_DIVIDE {1} \
-      CONFIG.NUM_OUT_CLKS {2} \
-      CONFIG.PLL_CLKIN_PERIOD {8.000} \
-      CONFIG.PRIMITIVE {PLL} \
-      CONFIG.PRIM_IN_FREQ {125} \
-  ] [get_ips pll_1]
+        CONFIG.CLKIN1_JITTER_PS {80.0} \
+        CONFIG.CLKOUT1_DRIVES {BUFG} \
+        CONFIG.CLKOUT1_JITTER {138.255} \
+        CONFIG.CLKOUT1_PHASE_ERROR {222.305} \
+        CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {600} \
+        CONFIG.CLKOUT2_DRIVES {BUFG} \
+        CONFIG.CLKOUT2_JITTER {191.470} \
+        CONFIG.CLKOUT2_PHASE_ERROR {222.305} \
+        CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {60} \
+        CONFIG.CLKOUT2_USED {true} \
+        CONFIG.CLKOUT3_DRIVES {BUFG} \
+        CONFIG.CLKOUT4_DRIVES {BUFG} \
+        CONFIG.CLKOUT5_DRIVES {BUFG} \
+        CONFIG.CLKOUT6_DRIVES {BUFG} \
+        CONFIG.CLKOUT7_DRIVES {BUFG} \
+        CONFIG.CLK_IN1_BOARD_INTERFACE {Custom} \
+        CONFIG.CLK_OUT1_PORT {clk_600MHz} \
+        CONFIG.CLK_OUT2_PORT {clk_60MHz} \
+        CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
+        CONFIG.MMCM_CLKFBOUT_MULT_F {48} \
+        CONFIG.MMCM_CLKIN1_PERIOD {8.000} \
+        CONFIG.MMCM_CLKIN2_PERIOD {10.000} \
+        CONFIG.MMCM_CLKOUT0_DIVIDE_F {2} \
+        CONFIG.MMCM_CLKOUT1_DIVIDE {20} \
+        CONFIG.MMCM_COMPENSATION {ZHOLD} \
+        CONFIG.MMCM_DIVCLK_DIVIDE {5} \
+        CONFIG.NUM_OUT_CLKS {2} \
+        CONFIG.PRIMITIVE {PLL} \
+        CONFIG.PRIM_IN_FREQ {125.000} \
+    ] [get_ips pll_1]
 
     generate_target all [get_ips]
 
@@ -62,11 +62,11 @@ if { [file isdirectory ../"IP"] } {
 #
 # STEP#2: setup design sources and constraints
 #
-read_vhdl HDMI_Interposer.vhd
-read_vhdl count_ones.vhd
-read_vhdl TMDS_8b10b_encoder.vhd
-read_vhdl TMDS_decoder.vhd
-read_xdc PYNQ_Z2_v1.xdc
+read_vhdl ../RTL/HDMI_Interposer.vhd
+read_vhdl ../RTL/count_ones.vhd
+read_vhdl ../RTL/TMDS_8b10b_encoder.vhd
+read_vhdl ../RTL/TMDS_decoder.vhd
+read_xdc ../Constraints/PYNQ_Z2_v1.xdc
 
 #
 # STEP#3: run synthesis, write design checkpoint, report timing, 
