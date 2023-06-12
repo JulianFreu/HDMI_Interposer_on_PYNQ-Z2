@@ -81,40 +81,42 @@ begin
         end if;
 end process;
 
-decide_output : process(w_qm, w_qm_inv, r_dc_bias, w_ones_qm, i_C0, i_C1)
+decide_output : process(i_clk)
 begin
-    if (i_data_enable = '0') then    
-        w_disparity <= 0;
-        if(i_C0 = '0' and i_C1 = '0') then
-            w_qout <= "1101010100";
-        elsif(i_C0 = '1' and i_C1 = '0') then
-            w_qout <= "0010101011";
-        elsif(i_C0 = '0' and i_C1 = '1') then 
-            w_qout <= "0101010100";
-        elsif(i_C0 = '1' and i_C1 = '1') then
-            w_qout <= "1010101011";
-        end if;
-    elsif (r_dc_bias = 0 or w_ones_qm = 4) then
-        if (w_qm(8) = '1') then
-            w_qout <= '0' &  w_qm;
-            w_disparity <= (r_dc_bias + (8 - 2*w_ones_qm));
-        else
+    if rising_edge(i_clk) then
+        if (i_data_enable = '0') then    
+            w_disparity <= 0;
+            if(i_C0 = '0' and i_C1 = '0') then
+                w_qout <= "1101010100";
+            elsif(i_C0 = '1' and i_C1 = '0') then
+                w_qout <= "0010101011";
+            elsif(i_C0 = '0' and i_C1 = '1') then 
+                w_qout <= "0101010100";
+            elsif(i_C0 = '1' and i_C1 = '1') then
+                w_qout <= "1010101011";
+            end if;
+        elsif (r_dc_bias = 0 or w_ones_qm = 4) then
+            if (w_qm(8) = '1') then
+                w_qout <= '0' &  w_qm;
+                w_disparity <= (r_dc_bias + (8 - 2*w_ones_qm));
+            else
+                w_qout <= '1' & w_qm_inv;
+                w_disparity <=  (r_dc_bias + w_ones_qm - (8 - w_ones_qm));
+            end if;        
+        elsif ((r_dc_bias > 0 and w_ones_qm > 4) or (r_dc_bias < 0 and w_ones_qm < 4)) then
             w_qout <= '1' & w_qm_inv;
-            w_disparity <=  (r_dc_bias + w_ones_qm - (8 - w_ones_qm));
-        end if;        
-    elsif ((r_dc_bias > 0 and w_ones_qm > 4) or (r_dc_bias < 0 and w_ones_qm < 4)) then
-        w_qout <= '1' & w_qm_inv;
-        if(w_qm(8) = '1') then
-            w_disparity <= r_dc_bias +2 + (8 - 2*w_ones_qm);
+            if(w_qm(8) = '1') then
+                w_disparity <= r_dc_bias +2 + (8 - 2*w_ones_qm);
+            else
+                w_disparity <= r_dc_bias + (8 - 2*w_ones_qm);
+            end if;
         else
-            w_disparity <= r_dc_bias + (8 - 2*w_ones_qm);
-        end if;
-    else
-        w_qout <= '0' & w_qm;
-        if(w_qm(8) = '1') then
-            w_disparity <= r_dc_bias + w_ones_qm -(8-w_ones_qm);
-        else
-            w_disparity <= r_dc_bias -2 + (w_ones_qm -(8-w_ones_qm));
+            w_qout <= '0' & w_qm;
+            if(w_qm(8) = '1') then
+                w_disparity <= r_dc_bias + w_ones_qm -(8-w_ones_qm);
+            else
+                w_disparity <= r_dc_bias -2 + (w_ones_qm -(8-w_ones_qm));
+            end if;
         end if;
     end if;
 end process;
