@@ -118,15 +118,11 @@ begin
                 w_disparity <= r_dc_bias -2 + (w_ones_qm -(8-w_ones_qm));
             end if;
         end if;
+        r_dc_bias <= w_disparity;
     end if;
 end process;
 
-    ff : process(i_clk)
-    begin
-        if (rising_edge(i_clk)) then
-            o_data <= w_qout;
-            r_dc_bias <= w_disparity;
-        end if;
-    end process;
+o_data <= w_qout;
+
 end architecture;
     
