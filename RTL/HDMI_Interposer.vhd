@@ -42,8 +42,8 @@ architecture behaviour of HDMI_Interposer is
         port
          (-- Clock in ports
           -- Clock out ports
-          clk_600MHz          : out    std_logic;
-          clk_60MHz          : out    std_logic;
+          clk_400MHz          : out    std_logic;
+          clk_40MHz          : out    std_logic;
           -- Status and control signals
           reset             : in     std_logic;
           locked            : out    std_logic;
@@ -87,11 +87,11 @@ architecture behaviour of HDMI_Interposer is
     --signal w_hdmi_rx_sda : std_logic;
    -- signal w_hdmi_tx_sda : std_logic;
  
-     signal r_counter_x : integer range 0 to 1649 := 0;
-     signal r_counter_y : integer range 0 to 749 := 0;
+     signal r_counter_x : integer range 0 to 1055 := 0;
+     signal r_counter_y : integer range 0 to 627 := 0;
      signal w_reset : std_logic;
-     signal w_clk_60MHz : std_logic;
-     signal w_clk_600MHz : std_logic;
+     signal w_clk_40MHz : std_logic;
+     signal w_clk_400MHz : std_logic;
      signal w_locked : std_logic;
      signal w_sysclk : std_logic;
  
@@ -120,8 +120,8 @@ begin
     clocks: pll_1
     port map ( 
     -- Clock out ports  
-        clk_600MHz => w_clk_600MHz,
-        clk_60MHz => w_clk_60MHz,
+        clk_400MHz => w_clk_400MHz,
+        clk_40MHz => w_clk_40MHz,
     -- Status and control signals                
         reset => w_reset,
         locked => w_locked,
@@ -130,39 +130,44 @@ begin
     );
     
     
-    counters : process(w_clk_60MHz)
+    counters : process(w_clk_40MHz)
     begin
-        if rising_edge(w_clk_60MHz) then
-            if (r_counter_x = 1649) then 
+        if rising_edge(w_clk_40MHz) then
+            if(w_reset = '1') then
                 r_counter_x <= 0;
+                r_counter_y <= 0;
             else
-                r_counter_x <= r_counter_x+1;
-            end if;
-            if (r_counter_x = 1649) then
-                if (r_counter_y = 749) then
-                    r_counter_y <= 0;
+                if (r_counter_x = 1055) then 
+                    r_counter_x <= 0;
                 else
-                    r_counter_y <= r_counter_y+1;
+                    r_counter_x <= r_counter_x+1;
+                end if;
+                if (r_counter_x = 1055) then
+                    if (r_counter_y = 627) then
+                        r_counter_y <= 0;
+                    else
+                        r_counter_y <= r_counter_y+1;
+                    end if;
                 end if;
             end if;
         end if;
     end process;
 
 
-    update_sync : process(w_clk_60MHz)
+    update_sync : process(w_clk_40MHz)
     begin
-        if rising_edge(w_clk_60MHz) then
-            if((r_counter_x >= 1390) and (r_counter_x < 1430)) then
+        if rising_edge(w_clk_40MHz) then
+            if((r_counter_x >= 840) and (r_counter_x < 968)) then
                 w_hsync <= '1';
             else 
                 w_hsync <= '0';
             end if;
-            if((r_counter_y >= 725) and (r_counter_y < 730)) then
+            if((r_counter_y >= 601) and (r_counter_y < 605)) then
                 w_vsync <= '1';
             else 
                 w_vsync <= '0';
             end if;
-            if((r_counter_x < 1280) and (r_counter_y < 720)) then
+            if((r_counter_x < 800) and (r_counter_y < 600)) then
                 w_DrawArea <= '1';
             else 
                 w_DrawArea <= '0';
@@ -215,14 +220,14 @@ begin
         port map (
             O => hdmi_tx_clk_p,     -- Diff_p output (connect directly to top-level port)
             OB => hdmi_tx_clk_n,   -- Diff_n output (connect directly to top-level port)
-            I => w_clk_60MHz      -- Buffer input 
+            I => w_clk_40MHz      -- Buffer input 
         );
 
     --end generate;
     
     encode_red : TMDS_8b10b_encoder 
         port map (
-            i_clk           => w_clk_60MHz,
+            i_clk           => w_clk_40MHz,
             i_data_enable   => w_DrawArea,
             i_C0            => '0',
             i_C1            => '0',
@@ -231,7 +236,7 @@ begin
         );
     encode_green : TMDS_8b10b_encoder 
         port map (
-            i_clk           => w_clk_60MHz,
+            i_clk           => w_clk_40MHz,
             i_data_enable   => w_DrawArea,
             i_C0            => '0',
             i_C1            => '0',
@@ -240,7 +245,7 @@ begin
         );
     encode_blue : TMDS_8b10b_encoder 
         port map (
-            i_clk           => w_clk_60MHz,
+            i_clk           => w_clk_40MHz,
             i_data_enable   => w_DrawArea,
             i_C0            => w_vsync,
             i_C1            => w_hsync,
@@ -249,57 +254,22 @@ begin
         );
     
 
-    shift_red : process (w_clk_600MHz)
+    shift_counter : process(w_clk_400MHz)
     begin
-        if rising_edge(w_clk_600MHz) then
-            w_shift_red <= '1' & w_shift_red(9 downto 1);
-            if load_red = '1' then
-                w_shift_red <= r_encoded_byte_r;
-            end if;
-        end if;
-    end process;
-    
-    shift_green : process (w_clk_600MHz)
-    begin
-        if rising_edge(w_clk_600MHz) then
-            w_shift_green <= '1' & w_shift_green(9 downto 1);
-            if load_green = '1' then
-                w_shift_green <= r_encoded_byte_g;
-            end if;
-        end if;
-    end process;
-     
-    shift_blue : process (w_clk_600MHz)
-    begin
-        if rising_edge(w_clk_600MHz) then
-            w_shift_blue <= '1' & w_shift_blue(9 downto 1);
-            if load_blue = '1' then
-                w_shift_blue <= r_encoded_byte_b;
-            end if;
-        end if;
-    end process;
-    
-
-    shift_counter : process(w_clk_600MHz)
-    begin
-        if rising_edge(w_clk_600MHz) then
-            if (r_shift_counter = 9) then
+        if rising_edge(w_clk_400MHz) then
+            if(w_reset = '1') then
                 r_shift_counter <= 0;
-                load_red <= '1';
-                load_green <= '1';
-                load_blue <= '1';
+            elsif (r_shift_counter = 9) then
+                r_shift_counter <= 0;
             else
                 r_shift_counter <= r_shift_counter+1;
-                load_red <= '0';
-                load_green <= '0';
-                load_blue <= '0';
             end if;
         end if;
     end process;
 
-    w_hdmi_tx(0) <= w_shift_red(0);
-    w_hdmi_tx(1) <= w_shift_green(0);
-    w_hdmi_tx(2) <= w_shift_blue(0);
+    w_hdmi_tx(0) <= r_encoded_byte_r(r_shift_counter);
+    w_hdmi_tx(1) <= r_encoded_byte_g(r_shift_counter);
+    w_hdmi_tx(2) <= r_encoded_byte_b(r_shift_counter);
 
     w_sysclk <= sysclk;
     w_reset <= reset;
@@ -310,7 +280,7 @@ begin
     led5_b <= w_reset;
 
     w_data_red <= "11110000";
-    w_data_green <= "11110000";
+    w_data_green <= "01000000";
     w_data_blue <= "11110000";
     
 end architecture;
