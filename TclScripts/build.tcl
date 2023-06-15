@@ -7,14 +7,14 @@ file mkdir $outputDir
 if { [file isdirectory ../"IP"] } {
     # if the IP files exist, we already generated the IP, so we can just
     # read the ip definition (.xci)
-    read_ip ../IP/sfix_19_16_to_float32.xci
+    read_ip ../IP/pll_1.xci
 } else {
     # IP folder does not exist. Create IP folder
     file mkdir ../IP
 
     # create_ip requires that a project is open in memory. Create project
     # but don't do anything with it
-    create_project -in_memory
+    create_project -in_memory -part xc7z020clg400-1
 
     # paste commands from Journal file to recreate IP
     create_ip -name clk_wiz -vendor xilinx.com -library ip \
@@ -66,7 +66,7 @@ set_property -dict [list \
     generate_target all [get_ips]
 
     # Synthesize all the IP
-    synth_ip [get_ips]
+    synth_ip [get_ips] 
 }
 
 #
@@ -75,7 +75,10 @@ set_property -dict [list \
 read_vhdl ../RTL/HDMI_Interposer.vhd
 read_vhdl ../RTL/count_ones.vhd
 read_vhdl ../RTL/TMDS_8b10b_encoder.vhd
-read_vhdl ../RTL/TMDS_decoder.vhd
+read_vhdl ../RTL/Serializer.vhd
+read_vhdl ../RTL/DVI_Transmitter.vhd
+read_vhdl ../RTL/Frame_Grabber.vhd
+read_vhdl ../RTL/Frame_Ctrl.vhd
 read_xdc ../Constraints/PYNQ_Z2_v1.xdc
 #
 # STEP#3: run synthesis, write design checkpoint, report timing, 

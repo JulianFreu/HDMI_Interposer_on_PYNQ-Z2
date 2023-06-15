@@ -14,7 +14,7 @@ if { [file isdirectory ../"IP"] } {
 
     # create_ip requires that a project is open in memory. Create project
     # but don't do anything with it
-    create_project -in_memory
+    create_project -in_memory -part xc7z020clg400-1
 
     # paste commands from Journal file to recreate IP
     create_ip -name clk_wiz -vendor xilinx.com -library ip \
