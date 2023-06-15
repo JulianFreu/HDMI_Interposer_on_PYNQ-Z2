@@ -3,3 +3,5 @@ IP/
 Output/
 .Xil
 tight_setup_hold_pins.txt
+*.dcp
+*.rpt
