@@ -153,8 +153,8 @@ begin
         port map (
             i_clk           => i_pix_clk,
             i_data_enable   => w_DrawArea,
-            i_C0            => w_vsync,
-            i_C1            => w_hsync,
+            i_C0            => w_hsync,
+            i_C1            => w_vsync,
             i_data          => w_data_blue,
             o_data          => r_encoded_byte_b
         );
