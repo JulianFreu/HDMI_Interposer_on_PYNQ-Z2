@@ -13,12 +13,12 @@ entity m_axi is
     port(
         --Write request channel
         AWREADY         : in std_logic; -- Ready indicator
-        AWID            : out std_logic_vector(ID_W_WIDTH-1 downto 0); -- Transaction identifier for the write channels
+        AWID            : out std_logic_vector(ID_W_WIDTH-1 downto 0) := (others => '0'); -- Transaction identifier for the write channels
         AWADDR          : out std_logic_vector(ADDR_WIDTH-1 downto 0); -- Transaction address
-        AWLEN           : out std_logic_vector(7 downto 0); -- Transaction length
-        AWSIZE          : out std_logic_vector(2 downto 0); -- Transaction size
-        AWBURST         : out std_logic_vector(1 downto 0); -- Burst attribute
-        AWLOCK          : out std_logic; -- Exclusive access indicator
+        AWLEN           : out std_logic_vector(7 downto 0) := "00001000"; -- Transaction length 8
+        AWSIZE          : out std_logic_vector(2 downto 0) := "010"; -- Transaction size "0b010" -> 4 bytes
+        AWBURST         : out std_logic_vector(1 downto 0) := "01"; -- Burst attribute "0b01" incrementing burst
+        AWLOCK          : out std_logic := '0'; -- Exclusive access indicator
         AWCACHE         : out std_logic_vector(3 downto 0); -- Memory attributes
         AWPROT          : out std_logic_vector(2 downto 0); -- Access attributes
         AWQOS           : out std_logic_vector(3 downto 0); -- QoS identifier
@@ -26,25 +26,25 @@ entity m_axi is
         WVALID          : out std_logic; -- Valid indicator
         WREADY          : in std_logic; -- Ready indicator
         WDATA           : out std_logic_vector(DATA_WIDTH-1 downto 0); -- Write data
-        WSTRB           : out std_logic_vector(DATA_WIDTH-1 downto 0); -- / : out std_logic_vector(7 downto 0); -- Write data strobes
+        WSTRB           : out std_logic_vector((DATA_WIDTH/8)-1 downto 0); -- The WSTRB signal carries write strobes that specify which byte lanes of the write data channel contain valid information
         WLAST           : out std_logic; -- Last write data
         --Write response channel
         BVALID          : in std_logic; -- Valid indicator
         BREADY          : out std_logic; -- Ready indicator
-        BID             : in std_logic_vector(ID_W_WIDTH-1 downto 0); -- in Transaction identifier for the write channels
-        BRESP           : in std_logic_vector(BRESP_WIDTH-1 downto 0); -- in Write response
+        BID             : in std_logic_vector(ID_W_WIDTH-1 downto 0); -- Transaction identifier for the write channels
+        BRESP           : in std_logic_vector(BRESP_WIDTH-1 downto 0); -- Write response
         -- read request channel
         ARVALID         : out std_logic; -- valid indicator
         ARREADY         : in std_logic;      -- ready indicator
         ARID            : out std_logic_vector(ID_R_WIDTH-1 downto 0); --Transaction identifier for the read channels
         ARADDR          : out std_logic_vector(ADDR_WIDTH-1 downto 0);
-        ARLEN           : out std_logic_vector(7 downto 0); -- Transaction length
-        ARSIZE          : out std_logic_vector(2 downto 0); -- Transaction size
-        ARBURST         : out std_logic_vector(1 downto 0); -- Burst attribute
-        ARLOCK          : out std_logic; -- Exclusive access indicator
+        ARLEN           : out std_logic_vector(7 downto 0)  := "00001000"; -- Transaction length
+        ARSIZE          : out std_logic_vector(2 downto 0) := "010";-- Transaction size "0b010" -> 4 bytes
+        ARBURST         : out std_logic_vector(1 downto 0) := "01"; -- Burst attribute  "0b01" incrementing burst
+        ARLOCK          : out std_logic:= '0'; -- Exclusive access indicator
         ARCACHE         : out std_logic_vector(3 downto 0); -- Memory attributes
         ARPROT          : out std_logic_vector(2 downto 0); -- Access attributes
-        ARQOS           : out std_logic_vector(3 downto 0); -- QoS identifier
+        ARQOS           : out std_logic_vector(3 downto 0); -- QoS identifier  
         --read data channel
         RVALID          : in std_logic; -- Valid indicator
         RREADY          : out std_logic; -- Ready indicator
