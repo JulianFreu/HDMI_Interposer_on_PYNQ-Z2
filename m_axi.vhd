@@ -18,10 +18,10 @@ entity m_axi is
         AWLEN           : out std_logic_vector(7 downto 0) := "00001000"; -- Transaction length 8
         AWSIZE          : out std_logic_vector(2 downto 0) := "010"; -- Transaction size "0b010" -> 4 bytes
         AWBURST         : out std_logic_vector(1 downto 0) := "01"; -- Burst attribute "0b01" incrementing burst
-        AWLOCK          : out std_logic := '0'; -- Exclusive access indicator
-        AWCACHE         : out std_logic_vector(3 downto 0); -- Memory attributes
-        AWPROT          : out std_logic_vector(2 downto 0); -- Access attributes
-        AWQOS           : out std_logic_vector(3 downto 0); -- QoS identifier
+        AWLOCK          : out std_logic := '0'; -- Exclusive access indicator (not supported by Xiliinx, leave on 0, see ug1037
+        AWCACHE         : out std_logic_vector(3 downto 0) := "0011"; -- Memory attributes 0011 signifying a bufferable and modifiable transaction
+        AWPROT          : out std_logic_vector(2 downto 0) := "000"; -- Access attributes Protections bits should be constant at 000 signifying a constantly secure transaction type
+        AWQOS           : out std_logic_vector(3 downto 0) := "0000"; -- QoS identifier Endpoint IP generally ignores the QoS bits
         --Write data channel
         WVALID          : out std_logic; -- Valid indicator
         WREADY          : in std_logic; -- Ready indicator
@@ -41,10 +41,10 @@ entity m_axi is
         ARLEN           : out std_logic_vector(7 downto 0)  := "00001000"; -- Transaction length
         ARSIZE          : out std_logic_vector(2 downto 0) := "010";-- Transaction size "0b010" -> 4 bytes
         ARBURST         : out std_logic_vector(1 downto 0) := "01"; -- Burst attribute  "0b01" incrementing burst
-        ARLOCK          : out std_logic:= '0'; -- Exclusive access indicator
-        ARCACHE         : out std_logic_vector(3 downto 0); -- Memory attributes
-        ARPROT          : out std_logic_vector(2 downto 0); -- Access attributes
-        ARQOS           : out std_logic_vector(3 downto 0); -- QoS identifier  
+        ARLOCK          : out std_logic:= '0'; -- Exclusive access indicator (not supported by Xiliinx, leave on 0, see ug1037
+        ARCACHE         : out std_logic_vector(3 downto 0) := "0011"; -- Memory attributes 0011 signifying a bufferable and modifiable transaction
+        ARPROT          : out std_logic_vector(2 downto 0) := "000"; -- Access attributes Protections bits should be constant at 000 signifying a constantly secure transaction type
+        ARQOS           : out std_logic_vector(3 downto 0) := "0000"; -- QoS identifier Endpoint IP generally ignores the QoS bits
         --read data channel
         RVALID          : in std_logic; -- Valid indicator
         RREADY          : out std_logic; -- Ready indicator
