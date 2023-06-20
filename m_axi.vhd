@@ -12,6 +12,7 @@ entity m_axi is
     );
     port(
         --Write request channel
+        AWVALD          : out std_logic; -- Valid indicator 
         AWREADY         : in std_logic; -- Ready indicator
         AWID            : out std_logic_vector(ID_W_WIDTH-1 downto 0) := (others => '0'); -- Transaction identifier for the write channels
         AWADDR          : out std_logic_vector(ADDR_WIDTH-1 downto 0); -- Transaction address
