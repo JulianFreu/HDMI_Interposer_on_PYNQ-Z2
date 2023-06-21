@@ -12,21 +12,22 @@ entity m_axi is
     );
     port(
         --Write request channel
+        AWVALD          : out std_logic; -- Valid indicator 
         AWREADY         : in std_logic; -- Ready indicator
         AWID            : out std_logic_vector(ID_W_WIDTH-1 downto 0) := (others => '0'); -- Transaction identifier for the write channels
         AWADDR          : out std_logic_vector(ADDR_WIDTH-1 downto 0); -- Transaction address
-        AWLEN           : out std_logic_vector(7 downto 0) := "00001000"; -- Transaction length 8
+        AWLEN           : out std_logic_vector(7 downto 0) := "00001111"; -- Transaction length 16
         AWSIZE          : out std_logic_vector(2 downto 0) := "010"; -- Transaction size "0b010" -> 4 bytes
         AWBURST         : out std_logic_vector(1 downto 0) := "01"; -- Burst attribute "0b01" incrementing burst
-        AWLOCK          : out std_logic := '0'; -- Exclusive access indicator
-        AWCACHE         : out std_logic_vector(3 downto 0); -- Memory attributes
-        AWPROT          : out std_logic_vector(2 downto 0); -- Access attributes
-        AWQOS           : out std_logic_vector(3 downto 0); -- QoS identifier
+        AWLOCK          : out std_logic := '0'; -- Exclusive access indicator (not supported by Xiliinx, leave on 0, see ug1037
+        AWCACHE         : out std_logic_vector(3 downto 0) := "0011"; -- Memory attributes 0011 signifying a bufferable and modifiable transaction
+        AWPROT          : out std_logic_vector(2 downto 0) := "000"; -- Access attributes Protections bits should be constant at 000 signifying a constantly secure transaction type
+        AWQOS           : out std_logic_vector(3 downto 0) := "0000"; -- QoS identifier Endpoint IP generally ignores the QoS bits
         --Write data channel
         WVALID          : out std_logic; -- Valid indicator
         WREADY          : in std_logic; -- Ready indicator
         WDATA           : out std_logic_vector(DATA_WIDTH-1 downto 0); -- Write data
-        WSTRB           : out std_logic_vector((DATA_WIDTH/8)-1 downto 0); -- The WSTRB signal carries write strobes that specify which byte lanes of the write data channel contain valid information
+        WSTRB           : out std_logic_vector((DATA_WIDTH/8)-1 downto 0) := "0111"; -- The WSTRB signal carries write strobes that specify which byte lanes of the write data channel contain valid information
         WLAST           : out std_logic; -- Last write data
         --Write response channel
         BVALID          : in std_logic; -- Valid indicator
@@ -38,13 +39,13 @@ entity m_axi is
         ARREADY         : in std_logic;      -- ready indicator
         ARID            : out std_logic_vector(ID_R_WIDTH-1 downto 0); --Transaction identifier for the read channels
         ARADDR          : out std_logic_vector(ADDR_WIDTH-1 downto 0);
-        ARLEN           : out std_logic_vector(7 downto 0)  := "00001000"; -- Transaction length
+        ARLEN           : out std_logic_vector(7 downto 0)  := "00001111"; -- Transaction length 16
         ARSIZE          : out std_logic_vector(2 downto 0) := "010";-- Transaction size "0b010" -> 4 bytes
         ARBURST         : out std_logic_vector(1 downto 0) := "01"; -- Burst attribute  "0b01" incrementing burst
-        ARLOCK          : out std_logic:= '0'; -- Exclusive access indicator
-        ARCACHE         : out std_logic_vector(3 downto 0); -- Memory attributes
-        ARPROT          : out std_logic_vector(2 downto 0); -- Access attributes
-        ARQOS           : out std_logic_vector(3 downto 0); -- QoS identifier  
+        ARLOCK          : out std_logic:= '0'; -- Exclusive access indicator (not supported by Xiliinx, leave on 0, see ug1037
+        ARCACHE         : out std_logic_vector(3 downto 0) := "0011"; -- Memory attributes 0011 signifying a bufferable and modifiable transaction
+        ARPROT          : out std_logic_vector(2 downto 0) := "000"; -- Access attributes Protections bits should be constant at 000 signifying a constantly secure transaction type
+        ARQOS           : out std_logic_vector(3 downto 0) := "0000"; -- QoS identifier Endpoint IP generally ignores the QoS bits
         --read data channel
         RVALID          : in std_logic; -- Valid indicator
         RREADY          : out std_logic; -- Ready indicator
@@ -59,4 +60,37 @@ architecture arch of m_axi is
 
 begin
 
+    case: wait for trigger
+        AWVALID = 0
+        AWADDR = others => '0'
+        WLAST = 0
+        WVALID = 0
+        WDATA = others => '0'
+        if trigger then
+            AWADDR = i_write_addr
+            AWVALID = 1
+            next state = write request
+
+    case: write request
+        if AWVALID = 1 and AWREADY = 1
+            next state = write data
+            AWVALID = 0
+            var bytes = 0;
+            WVALID = 1
+            WDATA = FIFO_output
+
+    case: write data   
+
+        if bytes 15
+            WLAST = 1
+        else 
+            WLAST = 0
+
+        if WVALID and WREADY
+            bytes +1
+            FIFO next byte
+            
+    case: check write response
+            
+            
 end architecture;
