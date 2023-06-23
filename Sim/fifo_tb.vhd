@@ -9,10 +9,10 @@ architecture Behavioral of fifo_tb is
 
     component fifo is
         generic(
-            g_FIFO_DEPTH            : integer := 50;  
-            g_FIFO_WIDTH            : integer := 24;
-            ALMOST_FULL_THRESHOLD   : integer := 45;  
-            ALMOST_EMPTY_THRESHOLD  : integer := 15
+            g_FIFO_DEPTH            : integer;  
+            g_FIFO_WIDTH            : integer;
+            ALMOST_FULL_THRESHOLD   : integer;  
+            ALMOST_EMPTY_THRESHOLD  : integer
         );
         port(
             i_clk          : in  std_logic;
@@ -77,17 +77,21 @@ begin
     test_proc: process
     begin
         wait for 50 ns;
-        i_wr_en <= '1';
+        i_wr_en <= '1';     
         for i in 0 to g_FIFO_DEPTH-1 loop
             i_data_in <= std_logic_vector(to_unsigned(i, g_FIFO_WIDTH));
             wait for 25 ns;
         end loop;
         i_wr_en <= '0';
         i_rd_en <= '1';
-        for i in 0 to g_FIFO_DEPTH-1 loop
+        for i in 0 to g_FIFO_DEPTH-10 loop
             wait for 25 ns;
         end loop;
-        i_rd_en <= '0';
+        i_wr_en <= '1';
+        for i in 0 to g_FIFO_DEPTH-1 loop
+            i_data_in <= std_logic_vector(to_unsigned(i, g_FIFO_WIDTH));
+            wait for 25 ns;
+        end loop;
         wait;
     end process test_proc;
 

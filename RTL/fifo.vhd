@@ -39,25 +39,46 @@ begin
             if i_reset = '1' then
                 r_wr_ptr <= 0;
                 r_rd_ptr <= 0;
+                r_count <= 0;
                 o_data_out <= (others => '0');
             else
-                if (i_wr_en = '1' and i_rd_en = '0') then
+                if (i_wr_en = '1' and i_rd_en = '0' and r_count < g_FIFO_DEPTH) then
                     r_mem(r_wr_ptr) <= i_data_in;
-                    r_wr_ptr <= r_wr_ptr + 1;
+                    if r_wr_ptr = g_FIFO_DEPTH-1 then
+                        r_wr_ptr <= 0;
+                    else
+                        r_wr_ptr <= r_wr_ptr + 1;
+                    end if;
                     r_count <= r_count + 1;
-                elsif (i_rd_en = '1' and i_wr_en = '0' and r_wr_ptr /= r_rd_ptr) then
+                elsif (i_rd_en = '1' and i_wr_en = '0' and r_count > 0) then
                     o_data_out <= r_mem(r_rd_ptr);
-                    r_rd_ptr <= r_rd_ptr + 1;
+                    if r_rd_ptr = g_FIFO_DEPTH-1 then 
+                        r_rd_ptr <= 0;
+                    else
+                        r_rd_ptr <= r_rd_ptr + 1;
+                    end if;
                     r_count <= r_count - 1;
                 elsif (i_rd_en = '1' and i_wr_en = '1') then
                     if (r_wr_ptr /= r_rd_ptr) then
                         o_data_out <= r_mem(r_rd_ptr);
                         r_mem(r_wr_ptr) <= i_data_in;
-                        r_rd_ptr <= r_rd_ptr + 1;
-                        r_wr_ptr <= r_wr_ptr + 1;
+                        if r_rd_ptr = g_FIFO_DEPTH-1 then 
+                            r_rd_ptr <= 0;
+                        else
+                            r_rd_ptr <= r_rd_ptr + 1;
+                        end if;
+                        if r_wr_ptr = g_FIFO_DEPTH-1 then
+                            r_wr_ptr <= 0;
+                        else
+                            r_wr_ptr <= r_wr_ptr + 1;
+                        end if;
                     else
                         r_mem(r_wr_ptr) <= i_data_in;
-                        r_wr_ptr <= r_wr_ptr + 1;
+                        if r_wr_ptr = g_FIFO_DEPTH-1 then
+                            r_wr_ptr <= 0;
+                        else
+                            r_wr_ptr <= r_wr_ptr + 1;
+                        end if;
                         r_count <= r_count + 1;
                     end if;
                 end if;
@@ -65,7 +86,7 @@ begin
         end if;
     end process;
 
-    o_full         <= '1' when r_count = 50 else '0';
+    o_full         <= '1' when r_count = g_FIFO_DEPTH else '0';
     o_empty        <= '1' when r_count = 0 else '0';
     o_almost_full  <= '1' when r_count >= ALMOST_FULL_THRESHOLD else '0';
     o_almost_empty <= '1' when r_count <= ALMOST_EMPTY_THRESHOLD else '0';
