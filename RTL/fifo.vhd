@@ -4,10 +4,10 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity fifo is
     generic(
-        g_FIFO_DEPTH            : integer := 50;  
-        g_FIFO_WIDTH            : integer := 24;
-        ALMOST_FULL_THRESHOLD   : integer := 45;  
-        ALMOST_EMPTY_THRESHOLD  : integer := 15
+        g_FIFO_DEPTH            : integer;  
+        g_FIFO_WIDTH            : integer;
+        g_ALMOST_FULL_THRESHOLD   : integer;  
+        g_ALMOST_EMPTY_THRESHOLD  : integer
     );
     port(
         i_clk          : in  std_logic;
@@ -88,7 +88,7 @@ begin
 
     o_full         <= '1' when r_count = g_FIFO_DEPTH else '0';
     o_empty        <= '1' when r_count = 0 else '0';
-    o_almost_full  <= '1' when r_count >= ALMOST_FULL_THRESHOLD else '0';
-    o_almost_empty <= '1' when r_count <= ALMOST_EMPTY_THRESHOLD else '0';
+    o_almost_full  <= '1' when r_count >= g_ALMOST_FULL_THRESHOLD else '0';
+    o_almost_empty <= '1' when r_count <= g_ALMOST_EMPTY_THRESHOLD else '0';
 
 end Behavioral;
